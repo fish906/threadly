@@ -49,3 +49,16 @@ def cleanup_old_messages(db: Session, days: int = 90):
     deleted = db.query(models.Message).filter(models.Message.created_at < cutoff).delete()
     db.commit()
     return deleted
+
+def update_topic(db: Session, topic_id: int, new_name: str = None, new_publisher_key: str = None):
+    topic = db.query(models.Topic).filter(models.Topic.id == topic_id).first()
+    if not topic:
+        return None
+    if new_name:
+        topic.name = new_name
+    if new_publisher_key:
+        # Hash the new key before saving
+        topic.publisher_key = utils.hash_key(new_publisher_key)
+    db.commit()
+    db.refresh(topic)
+    return topic

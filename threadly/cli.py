@@ -72,6 +72,34 @@ def list_topics():
     finally:
         db.close()
 
+@topic_app.command("edit")
+def edit_topic(
+    topic: str = typer.Option(..., help="Current topic name"),
+    new_name: str = typer.Option(None, help="New topic name"),
+    new_publisher_key: str = typer.Option(None, help="New publisher key"),
+):
+    """
+    Edit an existing topic's name and/or publisher key.
+    """
+    db = SessionLocal()
+    try:
+        topic_obj = crud.get_topic_by_name(db, topic)
+        if not topic_obj:
+            typer.echo(f"❌ Topic '{topic}' does not exist.")
+            raise typer.Exit()
+
+        updated = crud.update_topic(db, topic_obj.id, new_name=new_name, new_publisher_key=new_publisher_key)
+        if updated:
+            typer.echo(f"✅ Topic updated successfully.")
+            if new_name:
+                typer.echo(f"- New name: {updated.name}")
+            if new_publisher_key:
+                typer.echo("- Publisher key updated.")
+        else:
+            typer.echo("❌ Failed to update topic.")
+    finally:
+        db.close()
+
 # -----------------------------
 # MESSAGE COMMANDS
 # -----------------------------
