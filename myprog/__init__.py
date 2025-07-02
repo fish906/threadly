@@ -1,0 +1,1 @@
+# myprog/__init__.py
