@@ -1,8 +1,21 @@
 from flask import Flask, request, jsonify
 from threadly.db import SessionLocal
 from threadly import crud, utils, logger
+from threadly.tools import rate_limiter
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
+
+def get_real_ip():
+    x_forwarded_for = request.headers.get('X-Forwarded-For', '')
+    if x_forwarded_for:
+        # The first IP in the list is the client's IP
+        ip = x_forwarded_for.split(',')[0].strip()
+    else:
+        ip = request.remote_addr
+    return ip
+
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
@@ -47,8 +60,14 @@ def webhook():
             logger.logger.error(f"Key verification failed for topic '{topic_name}': {e}")
             return jsonify({"error": "Invalid key"}), 403
 
+        user_ip = get_real_ip()
+
+        if rate_limiter.is_rate_limited(db, user_ip, limit=5, window_minutes=1):
+            logger.logger.warning(f"Rate limit exceeded for IP: {user_ip}")
+            return jsonify({"error": "Too many requests"}), 429
+        
         created_message = crud.add_message(db, topic.id, title, message)
-        user_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+
         try:
             crud.log_ip_for_message(db, created_message.id, user_ip)
         except Exception as e:
