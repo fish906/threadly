@@ -2,7 +2,7 @@
 
 **Threadly** is a lightweight, secure, and extensible topic-based webhook message service built with **Flask** and **MariaDB**. Use it to receive, store, and manage messages from various sources via simple webhooks, organized by topics.
 
----
+
 
 ## 🚀 Features
 
@@ -12,7 +12,7 @@
 - **Command-line tools** — Manage topics, view and delete messages easily with the built-in CLI.
 - **Simple and extensible** — Minimal dependencies, easy to adapt to your needs.
 
----
+
 
 ## 📌 Use Cases
 
@@ -21,15 +21,13 @@
 - Build custom integrations that need a simple message bus.
 - Queue lightweight messages for later processing.
 
----
+
 
 ## ⚙️ Tech Stack
 
 - **Backend:** Python, Flask
 - **Database:** MariaDB
 - **CLI:** Typer for easy command-line management
-
----
 
 ## 🚦 Roadmap
 - Message forwarding: Fan-out to other webhooks and/or email
@@ -40,7 +38,7 @@
 - Scheduled messages: Allow scheduling messages to be sent later automatically.
 - Dockerization
 
----
+
 
 ## 📖 Getting Started
 **tbd**

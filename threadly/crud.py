@@ -72,3 +72,9 @@ def update_topic(db: Session, topic_id: int, new_name: str = None, new_publisher
         # Optionally log the error
         return False
 
+def log_ip_for_message(db: Session, message_id: int, ip_address: str):
+    ip_log = IPLog(message_id=message_id, ip_address=ip_address)
+    db.add(ip_log)
+    db.commit()
+    db.refresh(ip_log)
+    return ip_log
