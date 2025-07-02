@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
-from myprog.db import SessionLocal
-from myprog import crud, utils, logger
+from threadly.db import SessionLocal
+from threadly import crud, utils, logger
 
 app = Flask(__name__)
 

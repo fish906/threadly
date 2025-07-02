@@ -3,9 +3,9 @@
 import typer
 import uvicorn
 from . import server
-from myprog.db import SessionLocal, Base, engine
-from myprog import crud, utils, models
-from myprog import logger
+from threadly.db import SessionLocal, Base, engine
+from threadly import crud, utils, models
+from threadly import logger
 
 app = typer.Typer(help="Manage your webhook server & messages")
 

@@ -1,5 +1,3 @@
-# myprog/logger.py
-
 import logging
 from .config import LOG_FILE
 

@@ -1,5 +1,3 @@
-# myprog/utils.py
-
 from passlib.context import CryptContext
 import html
 
