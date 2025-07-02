@@ -50,15 +50,25 @@ def cleanup_old_messages(db: Session, days: int = 90):
     db.commit()
     return deleted
 
-def update_topic(db: Session, topic_id: int, new_name: str = None, new_publisher_key: str = None):
+def update_topic(db: Session, topic_id: int, new_name: str = None, new_publisher_key: str = None) -> bool:
+    """
+    Update topic name and/or publisher key by topic ID.
+    Returns True if update succeeded, False otherwise.
+    """
     topic = db.query(models.Topic).filter(models.Topic.id == topic_id).first()
     if not topic:
-        return None
+        return False
+
     if new_name:
         topic.name = new_name
     if new_publisher_key:
-        # Hash the new key before saving
-        topic.publisher_key = utils.hash_key(new_publisher_key)
-    db.commit()
-    db.refresh(topic)
-    return topic
+        topic.publisher_key = new_publisher_key
+
+    try:
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        # Optionally log the error
+        return False
+

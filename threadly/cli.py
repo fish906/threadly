@@ -1,11 +1,10 @@
 # cli.py
 
 import typer
-import uvicorn
 from . import server
 from threadly.db import SessionLocal, Base, engine
-from threadly import crud, utils, models
-from threadly import logger
+from threadly import crud, utils, models, logger
+import hashlib
 
 app = typer.Typer(help="Manage your webhook server & messages")
 
@@ -72,31 +71,54 @@ def list_topics():
     finally:
         db.close()
 
+def hash_key(key: str) -> str:
+    return hashlib.sha256(key.encode()).hexdigest()
+
 @topic_app.command("edit")
-def edit_topic(
-    topic: str = typer.Option(..., help="Current topic name"),
-    new_name: str = typer.Option(None, help="New topic name"),
-    new_publisher_key: str = typer.Option(None, help="New publisher key"),
-):
+def edit_topic(topic: str = typer.Option(..., help="Topic name to edit")):
     """
-    Edit an existing topic's name and/or publisher key.
+    Edit a topic's name or publisher key.
     """
-    db = SessionLocal()
+    db: Session = SessionLocal()
     try:
         topic_obj = crud.get_topic_by_name(db, topic)
         if not topic_obj:
             typer.echo(f"❌ Topic '{topic}' does not exist.")
             raise typer.Exit()
 
-        updated = crud.update_topic(db, topic_obj.id, new_name=new_name, new_publisher_key=new_publisher_key)
-        if updated:
-            typer.echo(f"✅ Topic updated successfully.")
-            if new_name:
-                typer.echo(f"- New name: {updated.name}")
-            if new_publisher_key:
-                typer.echo("- Publisher key updated.")
+        choice = typer.prompt("Edit 'name' or 'key'?").lower()
+        if choice not in ("name", "key"):
+            typer.echo("❌ Invalid choice, must be 'name' or 'key'.")
+            raise typer.Exit()
+
+        if choice == "name":
+            old_name = topic_obj.name
+            new_name = typer.prompt("Enter new topic name")
+            if crud.get_topic_by_name(db, new_name):
+                typer.echo(f"❌ Topic name '{new_name}' already exists.")
+                raise typer.Exit()
+            topic_obj.name = new_name
+            db.commit()
+            typer.echo(f"✅ Topic name updated to '{new_name}'.")
+            logger.logger.info(f"Topic name changed: '{old_name}' -> '{new_name}'")
+
         else:
-            typer.echo("❌ Failed to update topic.")
+            current_key = typer.prompt("Enter the current publisher key", hide_input=True)
+            if hash_key(current_key) != topic_obj.key_hash:
+                typer.echo("❌ Current key is incorrect.")
+                raise typer.Exit()
+
+            new_key = typer.prompt("Enter new publisher key", hide_input=True)
+            confirm_key = typer.prompt("Confirm new publisher key", hide_input=True)
+            if new_key != confirm_key:
+                typer.echo("❌ New keys do not match.")
+                raise typer.Exit()
+
+            topic_obj.key_hash = hash_key(new_key)
+            db.commit()
+            typer.echo("✅ Publisher key updated.")
+            logger.logger.info(f"Publisher key changed for topic '{topic_obj.name}'")
+
     finally:
         db.close()
 
