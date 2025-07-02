@@ -34,8 +34,17 @@ def webhook():
             logger.logger.warning("Message rejected: Topic '%s' does not exist.", topic_name)
             return jsonify({"error": "Invalid topic"}), 403
 
-        if not utils.verify_key(key, topic.key_hash):
-            logger.logger.warning("Message rejected: Invalid key for topic '%s'.", topic_name)
+        if not topic.key_hash:
+            logger.logger.error(f"Topic '{topic_name}' has no key hash set.")
+            return jsonify({"error": "Topic key not set"}), 500
+        
+        try:
+            if not utils.verify_key(key, topic.key_hash):
+                logger.logger.warning("Message rejected: Invalid key for topic '%s'.", topic_name)
+                return jsonify({"error": "Invalid key"}), 403
+            
+        except Exception as e:
+            logger.logger.error(f"Key verification failed for topic '{topic_name}': {e}")
             return jsonify({"error": "Invalid key"}), 403
 
         crud.add_message(db, topic.id, title, message)
