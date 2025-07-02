@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from . import models, utils
+from threadly.models import Message, IPLog
 
 def create_topic(db: Session, name: str, key: str):
     hashed = utils.hash_key(key)
@@ -12,8 +13,8 @@ def create_topic(db: Session, name: str, key: str):
 def get_topic_by_name(db: Session, name: str):
     return db.query(models.Topic).filter(models.Topic.name == name).first()
 
-def add_message(db: Session, topic_id: int, title: str, body: str):
-    message = models.Message(topic_id=topic_id, title=title, body=body)
+def add_message(db: Session, topic_id: int, title: str, body: str) -> Message:
+    message = Message(topic_id=topic_id, title=title, body=body)
     db.add(message)
     db.commit()
     db.refresh(message)

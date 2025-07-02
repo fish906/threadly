@@ -47,7 +47,13 @@ def webhook():
             logger.logger.error(f"Key verification failed for topic '{topic_name}': {e}")
             return jsonify({"error": "Invalid key"}), 403
 
-        crud.add_message(db, topic.id, title, message)
+        created_message = crud.add_message(db, topic.id, title, message)
+        user_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+        try:
+            crud.log_ip_for_message(db, created_message.id, user_ip)
+        except Exception as e:
+            logger.logger.error(f"Failed to log IP: {e}")
+
 
         return jsonify({"status": "Message received"}), 200
 

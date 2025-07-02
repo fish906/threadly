@@ -2,7 +2,10 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from datetime import datetime
+import pytz
 from .db import Base
+
+user_tz = pytz.timezone("Europe/Berlin")
 
 class Topic(Base):
     __tablename__ = "topics"
@@ -32,6 +35,6 @@ class IPLog(Base):
     id = Column(Integer, primary_key=True, index=True)
     message_id = Column(Integer, ForeignKey("messages.id"), nullable=True)
     ip_address = Column(String(45), index=True, nullable=False)  # IPv6 max length = 45
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(user_tz))
 
     message = relationship("Message", back_populates="ip_logs")
